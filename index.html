@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Exercice 4</title>
+    <script>// ======================================================
+// CONSTANTES PHYSIQUES
+// ======================================================
+const PRESSION_ATM = 101.325;   // pression atmosphérique (kPa)
+const R_AIR = 0.287042;         // constante gaz air sec (kJ/kg.K)
+const CP_AIR = 1.005;           // chaleur spécifique air (kJ/kg.K)
+const CP_VAPEUR = 1.86;         // chaleur spécifique vapeur (kJ/kg.K)
+const H_FG = 2501;              // chaleur latente evaporation (kJ/kg)
+
+// ======================================================
+// PRESSION DE SATURATION DE L'EAU
+// ======================================================
+function pression_saturation(T) {
+    const A = 8.14019;
+    const B = 1810.94;
+    const C = 244.485;
+    const Psat_mmHg = 10 ** (A - B / (T + C));
+    const Psat_kPa = Psat_mmHg * 0.133322;
+    return Psat_kPa;
+}
+
+// ======================================================
+// CALCUL PRESSION DE VAPEUR A PARTIR DE W
+// ======================================================
+function pression_vapeur(W, P = PRESSION_ATM) {
+    const Pv = (W * P) / (0.622 + W);
+    return Pv;
+}
+
+// ======================================================
+// ENTHALPIE DE L'AIR HUMIDE
+// ======================================================
+function enthalpie(T, W) {
+    const h = CP_AIR * T + W * (H_FG + CP_VAPEUR * T);
+    return h;
+}
+
+// ======================================================
+// VOLUME SPECIFIQUE
+// ======================================================
+function volume_specifique(T, W, P = PRESSION_ATM) {
+    const T_K = T + 273.15;
+    const v = (R_AIR * T_K * (1 + 1.6078 * W)) / P;
+    return v;
+}
+
+// ======================================================
+// POINT DE ROSEE
+// ======================================================
+function point_rosee(Pv) {
+    const Pv_mmHg = Pv / 0.133322;
+    const A = 8.14019;
+    const B = 1810.94;
+    const C = 244.485;
+    const Tdp = B / (A - Math.log10(Pv_mmHg)) - C;
+    return Tdp;
+}
+
+// ======================================================
+// PROGRAMME PRINCIPAL
+// ======================================================
+function runCalculation() {
+    const tempInput = document.getElementById('temp');
+    const humInput = document.getElementById('hum');
+    const resultat = document.getElementById('resultat');
+
+    if (!tempInput || !humInput || !resultat) {
+        console.error("Elements HTML introuvables.");
+        return;
+    }
+
+    const T = parseFloat(tempInput.value);
+    const W = parseFloat(humInput.value);
+
+    if (Number.isNaN(T) || Number.isNaN(W)) {
+        resultat.textContent = "Veuillez entrer des valeurs numeriques valides pour T et W.";
+        return;
+    }
+
+    if (W < 0) {
+        resultat.textContent = "L'humidite massique W doit etre superieure ou egale a 0.";
+        return;
+    }
+
+    const Pv = pression_vapeur(W);
+    const Psat = pression_saturation(T);
+    const RH = Pv / Psat;
+
+    const h = enthalpie(T, W);
+    const v = volume_specifique(T, W);
+    const Tdp = point_rosee(Pv);
+
+    const output = [
+        "------ RESULTATS ------",
+        `Humidite massique W : ${W.toFixed(5)} kg vapeur / kg air sec`,
+        `Humidite relative   : ${RH.toFixed(5)}`,
+        `Pression de vapeur  : ${Pv.toFixed(3)} kPa`,
+        `Enthalpie           : ${h.toFixed(2)} kJ/kg`,
+        `Volume specifique   : ${v.toFixed(3)} m3/kg`,
+        `Point de rosee      : ${Tdp.toFixed(2)} C`
+    ].join("\n");
+
+    resultat.textContent = output;
+    console.log(output);
+}
+
+window.runCalculation = runCalculation;
+</script>
+    <style>:root {
+    --bg-deep: #1f120c;
+    --bg-mid: #2f1c13;
+    --panel: #3a2418;
+    --panel-soft: #4a3022;
+    --line: #8f6f54;
+    --line-soft: #71523d;
+    --text-main: #f2e6d7;
+    --text-soft: #d7bfa6;
+    --accent: #c69664;
+    --accent-strong: #e1b07d;
+    --glow: rgba(198, 150, 100, 0.25);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background:
+        radial-gradient(circle at 10% 15%, rgba(255, 208, 152, 0.12), transparent 30%),
+        radial-gradient(circle at 90% 85%, rgba(147, 99, 61, 0.2), transparent 35%),
+        linear-gradient(160deg, var(--bg-deep), var(--bg-mid) 55%, #24150e);
+    font-family: 'Garamond', 'Georgia', serif;
+    color: var(--text-main);
+}
+
+table {
+    width: min(760px, 100%);
+    border-collapse: collapse;
+    padding: 22px;
+    border: 1px solid var(--line-soft);
+    border-radius: 18px;
+    overflow: hidden;
+    background:
+        linear-gradient(180deg, rgba(83, 55, 38, 0.62), rgba(51, 32, 22, 0.88)),
+        repeating-linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.015) 0,
+            rgba(255, 255, 255, 0.015) 2px,
+            transparent 2px,
+            transparent 10px
+        );
+    box-shadow:
+        0 28px 45px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 219, 177, 0.1),
+        inset 0 -2px 18px rgba(0, 0, 0, 0.28);
+}
+
+tr {
+    display: grid;
+    grid-template-columns: 1.35fr 1fr;
+    gap: 18px;
+    align-items: center;
+    padding: 12px 10px;
+}
+
+td {
+    font-size: 1.08rem;
+    line-height: 1.4;
+    color: var(--text-main);
+    letter-spacing: 0.2px;
+}
+
+td:first-child {
+    font-weight: 600;
+    color: var(--text-soft);
+}
+
+form {
+    margin: 0;
+}
+
+input[type="number"] {
+    width: 100%;
+    min-height: 56px;
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: linear-gradient(180deg, #2e1f15, #26180f);
+    color: var(--text-main);
+    font-size: 1.1rem;
+    font-family: inherit;
+    box-shadow:
+        inset 0 4px 8px rgba(0, 0, 0, 0.45),
+        0 0 0 0 rgba(198, 150, 100, 0);
+    transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease;
+}
+
+input[type="number"]:focus {
+    outline: none;
+    border-color: var(--accent-strong);
+    box-shadow:
+        inset 0 4px 8px rgba(0, 0, 0, 0.45),
+        0 0 0 3px var(--glow);
+    transform: translateY(-1px);
+}
+
+input::placeholder {
+    color: #e8d0b6;
+    opacity: 0.82;
+}
+
+.button {
+    width: 100%;
+    min-height: 56px;
+    border: 1px solid #c7986a;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #b88352, #8f603a);
+    color: #fff9f0;
+    font-size: 1.08rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow:
+        0 10px 18px rgba(0, 0, 0, 0.34),
+        inset 0 1px 0 rgba(255, 228, 192, 0.55);
+    transition: transform 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease;
+}
+
+.button:hover {
+    filter: brightness(1.06);
+    transform: translateY(-2px);
+    box-shadow:
+        0 14px 22px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 235, 207, 0.62);
+}
+
+.button:active {
+    transform: translateY(0);
+    box-shadow:
+        0 6px 12px rgba(0, 0, 0, 0.35),
+        inset 0 2px 4px rgba(87, 49, 26, 0.5);
+}
+
+pre#resultat {
+    margin: 4px 0 0;
+    padding: 18px;
+    width: 100%;
+    min-height: 220px;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    background:
+        linear-gradient(180deg, #1d130d, #17100a),
+        repeating-linear-gradient(
+            0deg,
+            rgba(255, 255, 255, 0.03) 0,
+            rgba(255, 255, 255, 0.03) 1px,
+            transparent 1px,
+            transparent 22px
+        );
+    color: #f8dcb8;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 1rem;
+    line-height: 1.55;
+    text-align: left;
+    white-space: pre-wrap;
+    box-shadow: inset 0 1px 8px rgba(0, 0, 0, 0.45);
+}
+
+table tr:nth-of-type(3) {
+    grid-template-columns: 1fr;
+    padding-top: 16px;
+}
+
+tr:last-child {
+    grid-template-columns: 1fr;
+    padding-top: 8px;
+}
+
+@media (max-width: 720px) {
+    body {
+        padding: 14px;
+    }
+
+    table {
+        padding: 14px;
+    }
+
+    tr {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        padding: 9px 4px;
+    }
+
+    td {
+        font-size: 1rem;
+    }
+
+    input[type="number"],
+    .button {
+        min-height: 52px;
+        font-size: 1rem;
+    }
+
+    pre#resultat {
+        min-height: 190px;
+        font-size: 0.95rem;
+    }
+}</style>
+</head>
+
+<body>
+    <table align="center">
+        <tr>
+            <td>
+                Température de l'air (°C) :
+            </td>
+            <td>
+                <form>
+                    <input type="number" id="temp" placeholder="Température de l'air (°C)">
+                </form>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Humidité Massique W (kg vapeur / kg air sec) :
+            </td>
+            <td>
+                <form>
+                    <input type="number" id="hum" placeholder="Humidité Massique W">
+                </form>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <pre id="resultat"></pre>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <form>
+                    <input type="button" class="button" value="Calculer" onclick="runCalculation()">
+                </form>
+            </td>
+        </tr>
+    </table>
+</body>
+
+</html>
