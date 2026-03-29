@@ -2,363 +2,623 @@
 <html lang="en">
 
 <head>
-    <title>Calculatrice Air Chaud</title>
+    <title>Exercice 4</title>
+    <style>
+        :root {
+            --bg-deep: #1f120c;
+            --bg-mid: #2f1c13;
+            --panel: #3a2418;
+            --panel-soft: #4a3022;
+            --line: #8f6f54;
+            --line-soft: #71523d;
+            --text-main: #f2e6d7;
+            --text-soft: #d7bfa6;
+            --accent: #c69664;
+            --accent-strong: #e1b07d;
+            --glow: rgba(198, 150, 100, 0.25);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background:
+                radial-gradient(circle at 10% 15%, rgba(255, 208, 152, 0.12), transparent 30%),
+                radial-gradient(circle at 90% 85%, rgba(147, 99, 61, 0.2), transparent 35%),
+                linear-gradient(160deg, var(--bg-deep), var(--bg-mid) 55%, #24150e);
+            font-family: 'Garamond', 'Georgia', serif;
+            color: var(--text-main);
+        }
+
+        .app-layout {
+            width: min(1180px, 100%);
+            display: grid;
+            grid-template-columns: minmax(280px, 340px) minmax(0, 760px);
+            gap: 24px;
+            align-items: start;
+        }
+
+        .history-panel {
+            border: 1px solid var(--line-soft);
+            border-radius: 18px;
+            background:
+                linear-gradient(180deg, rgba(70, 45, 31, 0.72), rgba(44, 27, 19, 0.9)),
+                repeating-linear-gradient(90deg,
+                    rgba(255, 255, 255, 0.015) 0,
+                    rgba(255, 255, 255, 0.015) 2px,
+                    transparent 2px,
+                    transparent 10px);
+            box-shadow:
+                0 18px 32px rgba(0, 0, 0, 0.42),
+                inset 0 1px 0 rgba(255, 219, 177, 0.08);
+            overflow: hidden;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 14px 12px;
+            border-bottom: 1px solid rgba(199, 152, 106, 0.28);
+            background: linear-gradient(180deg, rgba(105, 69, 47, 0.35), rgba(64, 40, 28, 0.2));
+        }
+
+        .history-title {
+            margin: 0;
+            font-size: 1.16rem;
+            letter-spacing: 0.5px;
+            color: #efd6bc;
+        }
+
+        .history-clear {
+            border: 1px solid #a17853;
+            border-radius: 8px;
+            background: linear-gradient(180deg, #845b3a, #634127);
+            color: #f8e8d5;
+            font-family: inherit;
+            font-size: 0.87rem;
+            padding: 6px 10px;
+            cursor: pointer;
+        }
+
+        .history-list {
+            list-style: none;
+            margin: 0;
+            padding: 12px;
+            max-height: 600px;
+            overflow: auto;
+            display: grid;
+            gap: 10px;
+        }
+
+        .history-item,
+        .history-empty {
+            border: 1px solid rgba(190, 145, 101, 0.34);
+            border-radius: 10px;
+            background: linear-gradient(180deg, rgba(43, 27, 18, 0.88), rgba(31, 20, 14, 0.96));
+            padding: 10px;
+        }
+
+        .history-meta {
+            color: #e5c9ab;
+            font-size: 0.86rem;
+            margin-bottom: 4px;
+        }
+
+        .history-line {
+            color: var(--text-main);
+            font-size: 0.95rem;
+            line-height: 1.35;
+        }
+
+        .history-empty {
+            color: #debea0;
+            font-size: 0.95rem;
+            text-align: center;
+        }
+
+        .calculator-shell {
+            width: min(760px, 100%);
+        }
+
+        .calculator-title {
+            margin: 0 0 14px;
+            text-align: center;
+            font-family: 'Garamond', 'Georgia', serif;
+            font-size: clamp(1.55rem, 2.5vw, 1.95rem);
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: #efd6bc;
+            text-shadow: 0 2px 7px rgba(0, 0, 0, 0.35);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            padding: 22px;
+            border: 1px solid var(--line-soft);
+            border-radius: 18px;
+            overflow: hidden;
+            background:
+                linear-gradient(180deg, rgba(83, 55, 38, 0.62), rgba(51, 32, 22, 0.88)),
+                repeating-linear-gradient(90deg,
+                    rgba(255, 255, 255, 0.015) 0,
+                    rgba(255, 255, 255, 0.015) 2px,
+                    transparent 2px,
+                    transparent 10px);
+            box-shadow:
+                0 28px 45px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 219, 177, 0.1),
+                inset 0 -2px 18px rgba(0, 0, 0, 0.28);
+        }
+
+        tr {
+            display: grid;
+            grid-template-columns: 1.35fr 1fr;
+            gap: 18px;
+            align-items: center;
+            padding: 12px 10px;
+        }
+
+        td {
+            font-size: 1.08rem;
+            line-height: 1.4;
+            color: var(--text-main);
+            letter-spacing: 0.2px;
+        }
+
+        td:first-child {
+            font-weight: 600;
+            color: var(--text-soft);
+        }
+
+        form {
+            margin: 0;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            min-height: 56px;
+            padding: 12px 14px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: linear-gradient(180deg, #2e1f15, #26180f);
+            color: var(--text-main);
+            font-size: 1.1rem;
+            font-family: inherit;
+            box-shadow:
+                inset 0 4px 8px rgba(0, 0, 0, 0.45),
+                0 0 0 0 rgba(198, 150, 100, 0);
+            transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: var(--accent-strong);
+            box-shadow:
+                inset 0 4px 8px rgba(0, 0, 0, 0.45),
+                0 0 0 3px var(--glow);
+            transform: translateY(-1px);
+        }
+
+        input::placeholder {
+            color: #e8d0b6;
+            opacity: 0.82;
+        }
+
+        .button {
+            width: 100%;
+            min-height: 56px;
+            border: 1px solid #c7986a;
+            border-radius: 12px;
+            background: linear-gradient(180deg, #b88352, #8f603a);
+            color: #fff9f0;
+            font-size: 1.08rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow:
+                0 10px 18px rgba(0, 0, 0, 0.34),
+                inset 0 1px 0 rgba(255, 228, 192, 0.55);
+            transition: transform 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .button:hover {
+            filter: brightness(1.06);
+            transform: translateY(-2px);
+            box-shadow:
+                0 14px 22px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 235, 207, 0.62);
+        }
+
+        .button:active {
+            transform: translateY(0);
+            box-shadow:
+                0 6px 12px rgba(0, 0, 0, 0.35),
+                inset 0 2px 4px rgba(87, 49, 26, 0.5);
+        }
+
+        pre#resultat {
+            margin: 4px 0 0;
+            padding: 18px;
+            width: 100%;
+            min-height: 220px;
+            border-radius: 12px;
+            border: 1px solid var(--line);
+            background:
+                linear-gradient(180deg, #1d130d, #17100a),
+                repeating-linear-gradient(0deg,
+                    rgba(255, 255, 255, 0.03) 0,
+                    rgba(255, 255, 255, 0.03) 1px,
+                    transparent 1px,
+                    transparent 22px);
+            color: #f8dcb8;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 1rem;
+            line-height: 1.55;
+            text-align: left;
+            white-space: pre-wrap;
+            box-shadow: inset 0 1px 8px rgba(0, 0, 0, 0.45);
+        }
+
+        table tr:nth-of-type(3) {
+            grid-template-columns: 1fr;
+            padding-top: 16px;
+        }
+
+        tr:last-child {
+            grid-template-columns: 1fr;
+            padding-top: 8px;
+        }
+
+        @media (max-width: 720px) {
+            body {
+                padding: 14px;
+            }
+
+            .app-layout {
+                grid-template-columns: 1fr;
+                gap: 14px;
+            }
+
+            .history-list {
+                max-height: 260px;
+            }
+
+            table {
+                padding: 14px;
+            }
+
+            tr {
+                grid-template-columns: 1fr;
+                gap: 10px;
+                padding: 9px 4px;
+            }
+
+            td {
+                font-size: 1rem;
+            }
+
+            input[type="number"],
+            .button {
+                min-height: 52px;
+                font-size: 1rem;
+            }
+
+            pre#resultat {
+                min-height: 190px;
+                font-size: 0.95rem;
+            }
+        }
+    </style>
     <script>// ======================================================
-// CONSTANTES PHYSIQUES
-// ======================================================
-const PRESSION_ATM = 101.325;   // pression atmosphérique (kPa)
-const R_AIR = 0.287042;         // constante gaz air sec (kJ/kg.K)
-const CP_AIR = 1.005;           // chaleur spécifique air (kJ/kg.K)
-const CP_VAPEUR = 1.86;         // chaleur spécifique vapeur (kJ/kg.K)
-const H_FG = 2501;              // chaleur latente evaporation (kJ/kg)
+        // CONSTANTES PHYSIQUES
+        // ======================================================
+        const PRESSION_ATM = 101.325;   // pression atmosphérique (kPa)
+        const R_AIR = 0.287042;  // constante gaz air sec (kJ/kg.K)
+        const CP_AIR = 1.005;     // chaleur spécifique air (kJ/kg.K)
+        const CP_VAPEUR = 1.86;      // chaleur spécifique vapeur (kJ/kg.K)
+        const H_FG = 2501;      // chaleur latente évaporation (kJ/kg)
 
-// ======================================================
-// PRESSION DE SATURATION DE L'EAU
-// ======================================================
-function pression_saturation(T) {
-    const A = 8.14019;
-    const B = 1810.94;
-    const C = 244.485;
-    const Psat_mmHg = 10 ** (A - B / (T + C));
-    const Psat_kPa = Psat_mmHg * 0.133322;
-    return Psat_kPa;
-}
+        // Plage de validité de la formule d'Antoine (°C)
+        const T_MIN = 0;
+        const T_MAX = 60;
+        const HISTORY_KEY = "calculatrice_air_chaud_history";
+        const HISTORY_LIMIT = 15;
 
-// ======================================================
-// CALCUL PRESSION DE VAPEUR A PARTIR DE W
-// ======================================================
-function pression_vapeur(W, P = PRESSION_ATM) {
-    const Pv = (W * P) / (0.622 + W);
-    return Pv;
-}
+        //Historique dependencies
+        const MAX_HISTORY = 50; // nombre max d'entrées gardées
 
-// ======================================================
-// ENTHALPIE DE L'AIR HUMIDE
-// ======================================================
-function enthalpie(T, W) {
-    const h = CP_AIR * T + W * (H_FG + CP_VAPEUR * T);
-    return h;
-}
 
-// ======================================================
-// VOLUME SPECIFIQUE
-// ======================================================
-function volume_specifique(T, W, P = PRESSION_ATM) {
-    const T_K = T + 273.15;
-    const v = (R_AIR * T_K * (1 + 1.6078 * W)) / P;
-    return v;
-}
+        // ======================================================
+        // PRESSION DE SATURATION (Formule d'Antoine)
+        // Valide pour 0°C ≤ T ≤ 60°C
+        // ======================================================
+        function pression_saturation(T) {
+            const A = 8.14019;
+            const B = 1810.94;
+            const C = 244.485;
+            const Psat_mmHg = Math.pow(10, A - B / (T + C));
+            const Psat_kPa = Psat_mmHg * 0.133322;
+            return Psat_kPa;
+        }
 
-// ======================================================
-// POINT DE ROSEE
-// ======================================================
-function point_rosee(Pv) {
-    const Pv_mmHg = Pv / 0.133322;
-    const A = 8.14019;
-    const B = 1810.94;
-    const C = 244.485;
-    const Tdp = B / (A - Math.log10(Pv_mmHg)) - C;
-    return Tdp;
-}
 
-// ======================================================
-// PROGRAMME PRINCIPAL
-// ======================================================
-function runCalculation() {
-    const tempInput = document.getElementById('temp');
-    const humInput = document.getElementById('hum');
-    const resultat = document.getElementById('resultat');
+        // ======================================================
+        // PRESSION DE VAPEUR À PARTIR DE W
+        // ======================================================
+        function pression_vapeur(W, P = PRESSION_ATM) {
+            return (W * P) / (0.622 + W);
+        }
 
-    if (!tempInput || !humInput || !resultat) {
-        console.error("Elements HTML introuvables.");
-        return;
-    }
 
-    const T = parseFloat(tempInput.value);
-    const W = parseFloat(humInput.value);
+        // ======================================================
+        // ENTHALPIE DE L'AIR HUMIDE (kJ/kg air sec)
+        // ======================================================
+        function enthalpie(T, W) {
+            return CP_AIR * T + W * (H_FG + CP_VAPEUR * T);
+        }
 
-    if (Number.isNaN(T) || Number.isNaN(W)) {
-        resultat.textContent = "Veuillez entrer des valeurs numeriques valides pour T et W.";
-        return;
-    }
 
-    if (W < 0) {
-        resultat.textContent = "L'humidite massique W doit etre superieure ou egale a 0.";
-        return;
-    }
+        // ======================================================
+        // VOLUME SPÉCIFIQUE (m³/kg air sec)
+        // ======================================================
+        function volume_specifique(T, W, P = PRESSION_ATM) {
+            const T_K = T + 273.15;
+            return (R_AIR * T_K * (1 + 1.6078 * W)) / P;
+        }
 
-    const Pv = pression_vapeur(W);
-    const Psat = pression_saturation(T);
-    const RH = Pv / Psat;
 
-    const h = enthalpie(T, W);
-    const v = volume_specifique(T, W);
-    const Tdp = point_rosee(Pv);
+        // ======================================================
+        // POINT DE ROSÉE (Inversion de la formule d'Antoine)
+        // ======================================================
+        function point_rosee(Pv) {
+            const Pv_mmHg = Pv / 0.133322;
+            const A = 8.14019;
+            const B = 1810.94;
+            const C = 244.485;
+            return B / (A - Math.log10(Pv_mmHg)) - C;
+        }
 
-    const output = [
-        "------ RESULTATS ------",
-        `Humidite massique W : ${W.toFixed(5)} kg vapeur / kg air sec`,
-        `Humidite relative   : ${RH.toFixed(5)}`,
-        `Pression de vapeur  : ${Pv.toFixed(3)} kPa`,
-        `Enthalpie           : ${h.toFixed(2)} kJ/kg`,
-        `Volume specifique   : ${v.toFixed(3)} m3/kg`,
-        `Point de rosee      : ${Tdp.toFixed(2)} C`
-    ].join("\n");
 
-    resultat.textContent = output;
-    console.log(output);
-}
+        // ======================================================
+        // PROGRAMME PRINCIPAL
+        // ======================================================
+        function runCalculation() {
+            const tempInput = document.getElementById('temp');
+            const humInput = document.getElementById('hum');
+            const resultat = document.getElementById('resultat');
 
-window.runCalculation = runCalculation;
-</script>
-    <style>:root {
-    --bg-deep: #1f120c;
-    --bg-mid: #2f1c13;
-    --panel: #3a2418;
-    --panel-soft: #4a3022;
-    --line: #8f6f54;
-    --line-soft: #71523d;
-    --text-main: #f2e6d7;
-    --text-soft: #d7bfa6;
-    --accent: #c69664;
-    --accent-strong: #e1b07d;
-    --glow: rgba(198, 150, 100, 0.25);
-}
+            if (!tempInput || !humInput || !resultat) {
+                console.error("Éléments HTML introuvables.");
+                return;
+            }
 
-* {
-    box-sizing: border-box;
-}
+            const T = parseFloat(tempInput.value);
+            const W = parseFloat(humInput.value);
 
-body {
-    margin: 0;
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-    background:
-        radial-gradient(circle at 10% 15%, rgba(255, 208, 152, 0.12), transparent 30%),
-        radial-gradient(circle at 90% 85%, rgba(147, 99, 61, 0.2), transparent 35%),
-        linear-gradient(160deg, var(--bg-deep), var(--bg-mid) 55%, #24150e);
-    font-family: 'Garamond', 'Georgia', serif;
-    color: var(--text-main);
-}
+            // --- Validation : valeurs numériques ---
+            if (Number.isNaN(T) || Number.isNaN(W)) {
+                resultat.textContent = "Erreur : veuillez entrer des valeurs numériques valides pour T et W.";
+                return;
+            }
 
-table {
-    width: min(760px, 100%);
-    border-collapse: collapse;
-    padding: 22px;
-    border: 1px solid var(--line-soft);
-    border-radius: 18px;
-    overflow: hidden;
-    background:
-        linear-gradient(180deg, rgba(83, 55, 38, 0.62), rgba(51, 32, 22, 0.88)),
-        repeating-linear-gradient(
-            90deg,
-            rgba(255, 255, 255, 0.015) 0,
-            rgba(255, 255, 255, 0.015) 2px,
-            transparent 2px,
-            transparent 10px
-        );
-    box-shadow:
-        0 28px 45px rgba(0, 0, 0, 0.5),
-        inset 0 1px 0 rgba(255, 219, 177, 0.1),
-        inset 0 -2px 18px rgba(0, 0, 0, 0.28);
-}
+            // --- Validation : W ≥ 0 ---
+            if (W < 0) {
+                resultat.textContent = "Erreur : l'humidité massique W doit être supérieure ou égale à 0.";
+                return;
+            }
 
-tr {
-    display: grid;
-    grid-template-columns: 1.35fr 1fr;
-    gap: 18px;
-    align-items: center;
-    padding: 12px 10px;
-}
+            // --- Validation : HR ≤ 1 (W physiquement cohérent avec T) ---
+            const Pv = pression_vapeur(W);
+            const Psat = pression_saturation(T);
+            if (Pv > Psat) {
+                const W_max = (0.622 * Psat) / (PRESSION_ATM - Psat);
+                resultat.textContent =
+                    `Erreur : W trop élevé pour T = ${T} °C.\n` +
+                    `À cette température, W max (air saturé) = ${W_max.toFixed(5)} kg/kg.\n` +
+                    `Au-delà, l'humidité relative dépasserait 100 %, ce qui est physiquement impossible.`;
+                return;
+            }
 
-td {
-    font-size: 1.08rem;
-    line-height: 1.4;
-    color: var(--text-main);
-    letter-spacing: 0.2px;
-}
+            // --- Calculs ---
+            const RH = Pv / Psat;
+            const h = enthalpie(T, W);
+            const v = volume_specifique(T, W);
+            const Tdp = point_rosee(Pv);
 
-td:first-child {
-    font-weight: 600;
-    color: var(--text-soft);
-}
+            // --- Affichage ---
+            const output = [
+                "------ RÉSULTATS ------",
+                `Température          : ${T.toFixed(2)} °C`,
+                `Humidité massique W  : ${W.toFixed(5)} kg vapeur / kg air sec`,
+                `Humidité relative    : ${(RH * 100).toFixed(2)} %`,
+                `Pression de vapeur   : ${Pv.toFixed(3)} kPa`,
+                `Pression de sat.     : ${Psat.toFixed(3)} kPa`,
+                `Enthalpie            : ${h.toFixed(2)} kJ/kg`,
+                `Volume spécifique    : ${v.toFixed(4)} m³/kg`,
+                `Point de rosée       : ${Tdp.toFixed(2)} °C`
+            ].join("\n");
 
-form {
-    margin: 0;
-}
+            resultat.textContent = output;
+            console.log(output);
 
-input[type="number"] {
-    width: 100%;
-    min-height: 56px;
-    padding: 12px 14px;
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    background: linear-gradient(180deg, #2e1f15, #26180f);
-    color: var(--text-main);
-    font-size: 1.1rem;
-    font-family: inherit;
-    box-shadow:
-        inset 0 4px 8px rgba(0, 0, 0, 0.45),
-        0 0 0 0 rgba(198, 150, 100, 0);
-    transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease;
-}
+            addHistoryEntry({
+                T,
+                W,
+                RH: RH * 100,
+                h,
+                Tdp
+            });
+            saveToHistory(output);
+        }
 
-input[type="number"]:focus {
-    outline: none;
-    border-color: var(--accent-strong);
-    box-shadow:
-        inset 0 4px 8px rgba(0, 0, 0, 0.45),
-        0 0 0 3px var(--glow);
-    transform: translateY(-1px);
-}
+        function readHistory() {
+            try {
+                const raw = localStorage.getItem(HISTORY_KEY);
+                if (!raw) return [];
+                const parsed = JSON.parse(raw);
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (error) {
+                console.warn("Historique invalide, reinitialisation.", error);
+                return [];
+            }
+        }
 
-input::placeholder {
-    color: #e8d0b6;
-    opacity: 0.82;
-}
+        function writeHistory(history) {
+            localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+        }
 
-.button {
-    width: 100%;
-    min-height: 56px;
-    border: 1px solid #c7986a;
-    border-radius: 12px;
-    background: linear-gradient(180deg, #b88352, #8f603a);
-    color: #fff9f0;
-    font-size: 1.08rem;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    font-weight: 700;
-    cursor: pointer;
-    box-shadow:
-        0 10px 18px rgba(0, 0, 0, 0.34),
-        inset 0 1px 0 rgba(255, 228, 192, 0.55);
-    transition: transform 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease;
-}
+        function addHistoryEntry(entry) {
+            const history = readHistory();
+            const item = {
+                ...entry,
+                createdAt: new Date().toLocaleString('fr-FR')
+            };
+            history.unshift(item);
+            const clipped = history.slice(0, HISTORY_LIMIT);
+            writeHistory(clipped);
+            renderHistory();
+        }
 
-.button:hover {
-    filter: brightness(1.06);
-    transform: translateY(-2px);
-    box-shadow:
-        0 14px 22px rgba(0, 0, 0, 0.4),
-        inset 0 1px 0 rgba(255, 235, 207, 0.62);
-}
+        function clearHistory() {
+            localStorage.removeItem(HISTORY_KEY);
+            renderHistory();
+        }
 
-.button:active {
-    transform: translateY(0);
-    box-shadow:
-        0 6px 12px rgba(0, 0, 0, 0.35),
-        inset 0 2px 4px rgba(87, 49, 26, 0.5);
-}
+        function renderHistory() {
+            const list = document.getElementById('history-list');
+            if (!list) return;
 
-pre#resultat {
-    margin: 4px 0 0;
-    padding: 18px;
-    width: 100%;
-    min-height: 220px;
-    border-radius: 12px;
-    border: 1px solid var(--line);
-    background:
-        linear-gradient(180deg, #1d130d, #17100a),
-        repeating-linear-gradient(
-            0deg,
-            rgba(255, 255, 255, 0.03) 0,
-            rgba(255, 255, 255, 0.03) 1px,
-            transparent 1px,
-            transparent 22px
-        );
-    color: #f8dcb8;
-    font-family: 'Consolas', 'Courier New', monospace;
-    font-size: 1rem;
-    line-height: 1.55;
-    text-align: left;
-    white-space: pre-wrap;
-    box-shadow: inset 0 1px 8px rgba(0, 0, 0, 0.45);
-}
+            const history = readHistory();
+            if (history.length === 0) {
+                list.innerHTML = '<li class="history-empty">Aucun calcul enregistre pour le moment.</li>';
+                return;
+            }
 
-table tr:nth-of-type(3) {
-    grid-template-columns: 1fr;
-    padding-top: 16px;
-}
+            list.innerHTML = history
+                .map((item) => {
+                    return `
+                <li class="history-item">
+                    <div class="history-meta">${item.createdAt}</div>
+                    <div class="history-line">T: ${item.T.toFixed(2)} C | W: ${item.W.toFixed(5)}</div>
+                    <div class="history-line">HR: ${item.RH.toFixed(2)} % | h: ${item.h.toFixed(2)} kJ/kg</div>
+                    <div class="history-line">Point de rosee: ${item.Tdp.toFixed(2)} C</div>
+                </li>
+            `;
+                })
+                .join('');
+        }
+        // ======================================================
+        // HISTORIQUE (localStorage)
+        // ======================================================
 
-tr:last-child {
-    grid-template-columns: 1fr;
-    padding-top: 8px;
-}
+        function saveToHistory(resultText) {
+            const entry = {
+                date: new Date().toLocaleString('fr-FR'),
+                result: resultText
+            };
+            const history = loadHistory();
+            history.unshift(entry); // ajoute en tête de liste
+            if (history.length > MAX_HISTORY) history.pop(); // supprime le plus ancien
+            localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+            renderHistory();
+        }
 
-@media (max-width: 720px) {
-    body {
-        padding: 14px;
-    }
+        function loadHistory() {
+            try {
+                return JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
+            } catch {
+                return [];
+            }
+        }
 
-    table {
-        padding: 14px;
-    }
+        function renderHistory() {
+            const container = document.getElementById('historique');
+            if (!container) return;
+            const history = loadHistory();
+            if (history.length === 0) {
+                container.textContent = "Aucun calcul enregistré.";
+                return;
+            }
+            container.innerHTML = history.map((entry, i) =>
+                `<details>
+            <summary>${entry.date}</summary>
+            <pre>${entry.result}</pre>
+        </details>`
+            ).join('');
+        }
 
-    tr {
-        grid-template-columns: 1fr;
-        gap: 10px;
-        padding: 9px 4px;
-    }
+        function clearHistory() {
+            localStorage.removeItem(HISTORY_KEY);
+            renderHistory();
+        }
 
-    td {
-        font-size: 1rem;
-    }
-
-    input[type="number"],
-    .button {
-        min-height: 52px;
-        font-size: 1rem;
-    }
-
-    pre#resultat {
-        min-height: 190px;
-        font-size: 0.95rem;
-    }
-}</style>
-        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-    <link rel="manifest" href="/site.webmanifest">
+        // Charger l'historique au démarrage
+        window.addEventListener('DOMContentLoaded', renderHistory);
+        window.clearHistory = clearHistory;
+        window.runCalculation = runCalculation;
+    </script>
 </head>
 
 <body>
-    <table align="center">
-        <tr>
-            <td>
-                Température de l'air (°C) :
-            </td>
-            <td>
-                <form>
-                    <input type="number" id="temp" placeholder="Température de l'air (°C)">
-                </form>
-            </td>
-        </tr>
-        <tr>
-            <td>
-                Humidité Massique W (kg vapeur / kg air sec) :
-            </td>
-            <td>
-                <form>
-                    <input type="number" id="hum" placeholder="Humidité Massique W">
-                </form>
-            </td>
-        </tr>
-        <tr>
-            <td colspan="2">
-                <pre id="resultat"></pre>
-            </td>
-        </tr>
-        <tr>
-            <td colspan="2">
-                <form>
-                    <input type="button" class="button" value="Calculer" onclick="runCalculation()">
-                </form>
-            </td>
-        </tr>
-    </table>
+    <div class="app-layout">
+        <aside class="history-panel" aria-label="Historique des calculs">
+            <div class="history-header">
+                <h2 class="history-title">Historique</h2>
+                <button class="history-clear" type="button" onclick="clearHistory()">Effacer</button>
+            </div>
+            <ul id="history-list" class="history-list"></ul>
+        </aside>
+
+        <div class="calculator-shell">
+            <h1 class="calculator-title">Calculatrice Air Chaud</h1>
+
+            <table align="center">
+                <tr>
+                    <td>
+                        Température de l'air (°C) :
+                    </td>
+                    <td>
+                        <form>
+                            <input type="number" id="temp" placeholder="Température de l'air (°C)">
+                        </form>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Humidité Massique W (kg vapeur / kg air sec) :
+                    </td>
+                    <td>
+                        <form>
+                            <input type="number" id="hum" placeholder="Humidité Massique W">
+                        </form>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <pre id="resultat"></pre>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <form>
+                            <input type="button" class="button" value="Calculer" onclick="runCalculation()">
+                        </form>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
 </body>
 
 </html>
