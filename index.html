@@ -222,6 +222,7 @@
             background: linear-gradient(180deg, #b88352, #8f603a);
             color: #fff9f0;
             font-size: 1.08rem;
+            font-family: 'Garamond', 'Georgia', serif;
             letter-spacing: 1px;
             text-transform: uppercase;
             font-weight: 700;
@@ -268,6 +269,36 @@
             text-align: left;
             white-space: pre-wrap;
             box-shadow: inset 0 1px 8px rgba(0, 0, 0, 0.45);
+        }
+
+        .result-wrap {
+            position: relative;
+        }
+
+        .copy-result-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            border: 1px solid #b8895d;
+            border-radius: 8px;
+            background: linear-gradient(180deg, #8f613c, #6e482b);
+            color: #fff2e2;
+            font-family: inherit;
+            font-size: 0.85rem;
+            letter-spacing: 0.4px;
+            padding: 5px 10px;
+            cursor: pointer;
+            transition: filter 0.2s ease, transform 0.2s ease;
+        }
+
+        .copy-result-btn:hover {
+            filter: brightness(1.06);
+            transform: translateY(-1px);
+        }
+
+        .copy-result-btn.copied {
+            background: linear-gradient(180deg, #6f8c4d, #4f6a35);
+            border-color: #9abf74;
         }
 
         table tr:nth-of-type(3) {
@@ -459,7 +490,6 @@
                 h,
                 Tdp
             });
-            saveToHistory(output);
         }
 
         function readHistory() {
@@ -501,7 +531,7 @@
 
             const history = readHistory();
             if (history.length === 0) {
-                list.innerHTML = '<li class="history-empty">Aucun calcul enregistre pour le moment.</li>';
+                list.innerHTML = '<li class="history-empty">Aucun calcul enregistré pour le moment.</li>';
                 return;
             }
 
@@ -518,53 +548,58 @@
                 })
                 .join('');
         }
-        // ======================================================
-        // HISTORIQUE (localStorage)
-        // ======================================================
 
-        function saveToHistory(resultText) {
-            const entry = {
-                date: new Date().toLocaleString('fr-FR'),
-                result: resultText
-            };
-            const history = loadHistory();
-            history.unshift(entry); // ajoute en tête de liste
-            if (history.length > MAX_HISTORY) history.pop(); // supprime le plus ancien
-            localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
-            renderHistory();
+        function setupEnterToCalculate() {
+            const tempInput = document.getElementById('temp');
+            const humInput = document.getElementById('hum');
+            const inputs = [tempInput, humInput].filter(Boolean);
+
+            inputs.forEach((input) => {
+                input.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        runCalculation();
+                    }
+                });
+            });
         }
 
-        function loadHistory() {
-            try {
-                return JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
-            } catch {
-                return [];
-            }
-        }
+        async function copyResult() {
+            const result = document.getElementById('resultat');
+            const copyBtn = document.getElementById('copy-result-btn');
+            if (!result || !copyBtn) return;
 
-        function renderHistory() {
-            const container = document.getElementById('historique');
-            if (!container) return;
-            const history = loadHistory();
-            if (history.length === 0) {
-                container.textContent = "Aucun calcul enregistré.";
+            const text = result.textContent.trim();
+            if (!text) {
+                copyBtn.textContent = 'Vide';
+                setTimeout(() => {
+                    copyBtn.textContent = 'Copier';
+                }, 900);
                 return;
             }
-            container.innerHTML = history.map((entry, i) =>
-                `<details>
-            <summary>${entry.date}</summary>
-            <pre>${entry.result}</pre>
-        </details>`
-            ).join('');
-        }
 
-        function clearHistory() {
-            localStorage.removeItem(HISTORY_KEY);
-            renderHistory();
+            try {
+                await navigator.clipboard.writeText(text);
+                copyBtn.classList.add('copied');
+                copyBtn.textContent = 'Copie';
+                setTimeout(() => {
+                    copyBtn.classList.remove('copied');
+                    copyBtn.textContent = 'Copier';
+                }, 1200);
+            } catch (error) {
+                copyBtn.textContent = 'Erreur';
+                setTimeout(() => {
+                    copyBtn.textContent = 'Copier';
+                }, 1200);
+            }
         }
 
         // Charger l'historique au démarrage
-        window.addEventListener('DOMContentLoaded', renderHistory);
+        window.addEventListener('DOMContentLoaded', () => {
+            renderHistory();
+            setupEnterToCalculate();
+        });
+        window.copyResult = copyResult;
         window.clearHistory = clearHistory;
         window.runCalculation = runCalculation;
     </script>
@@ -589,9 +624,7 @@
                         Température de l'air (°C) :
                     </td>
                     <td>
-                        <form>
-                            <input type="number" id="temp" placeholder="Température de l'air (°C)">
-                        </form>
+                        <input type="number" id="temp" placeholder="Température de l'air (°C)">
                     </td>
                 </tr>
                 <tr>
@@ -599,21 +632,20 @@
                         Humidité Massique W (kg vapeur / kg air sec) :
                     </td>
                     <td>
-                        <form>
-                            <input type="number" id="hum" placeholder="Humidité Massique W">
-                        </form>
+                        <input type="number" id="hum" placeholder="Humidité Massique W">
                     </td>
                 </tr>
                 <tr>
                     <td colspan="2">
-                        <pre id="resultat"></pre>
+                        <div class="result-wrap">
+                            <button id="copy-result-btn" class="copy-result-btn" type="button" onclick="copyResult()">Copier</button>
+                            <pre id="resultat"></pre>
+                        </div>
                     </td>
                 </tr>
                 <tr>
                     <td colspan="2">
-                        <form>
-                            <input type="button" class="button" value="Calculer" onclick="runCalculation()">
-                        </form>
+                        <input type="button" class="button" value="Calculer" onclick="runCalculation()">
                     </td>
                 </tr>
             </table>
