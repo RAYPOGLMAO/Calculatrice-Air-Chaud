@@ -250,6 +250,36 @@
             transform: translateY(-1px);
         }
 
+        select {
+            width: 100%;
+            min-height: 56px;
+            padding: 12px 14px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: linear-gradient(180deg, #2e1f15, #26180f);
+            color: var(--text-main);
+            font-size: 1.1rem;
+            font-family: inherit;
+            box-shadow:
+                inset 0 4px 8px rgba(0, 0, 0, 0.45),
+                0 0 0 0 rgba(198, 150, 100, 0);
+            transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--accent-strong);
+            box-shadow:
+                inset 0 4px 8px rgba(0, 0, 0, 0.45),
+                0 0 0 3px var(--glow);
+            transform: translateY(-1px);
+        }
+
+        select option {
+            color: #2a1a12;
+            background: #f2e2cd;
+        }
+
         input[type="number"]::-webkit-outer-spin-button,
         input[type="number"]::-webkit-inner-spin-button {
             margin: 0;
@@ -335,6 +365,7 @@
 
         .result-wrap {
             position: relative;
+            width: 100%;
         }
 
         .copy-result-btn {
@@ -363,12 +394,12 @@
             border-color: #9abf74;
         }
 
-        table tr:nth-of-type(3) {
+        table tr.result-row {
             grid-template-columns: 1fr;
             padding-top: 16px;
         }
 
-        tr:last-child {
+        table tr.action-row {
             grid-template-columns: 1fr;
             padding-top: 8px;
         }
@@ -402,6 +433,7 @@
             }
 
             input[type="number"],
+            select,
             .button {
                 min-height: 52px;
                 font-size: 1rem;
@@ -488,43 +520,70 @@
         // ======================================================
         function runCalculation() {
             const tempInput = document.getElementById('temp');
-            const humInput = document.getElementById('hum');
+            const humTypeInput = document.getElementById('hum-type');
+            const humValueInput = document.getElementById('hum-value');
             const resultat = document.getElementById('resultat');
 
-            if (!tempInput || !humInput || !resultat) {
+            if (!tempInput || !humTypeInput || !humValueInput || !resultat) {
                 console.error("Éléments HTML introuvables.");
                 return;
             }
 
             const T = parseFloat(tempInput.value);
-            const W = parseFloat(humInput.value);
+            const humType = humTypeInput.value;
+            const inputValue = parseFloat(humValueInput.value);
 
             // --- Validation : valeurs numériques ---
-            if (Number.isNaN(T) || Number.isNaN(W)) {
-                resultat.textContent = "Erreur : veuillez entrer des valeurs numériques valides pour T et W.";
+            if (Number.isNaN(T) || Number.isNaN(inputValue)) {
+                resultat.textContent = "Erreur : veuillez entrer des valeurs numériques valides pour T et l'humidité choisie.";
                 return;
             }
 
-            // --- Validation : W ≥ 0 ---
-            if (W < 0) {
-                resultat.textContent = "Erreur : l'humidité massique W doit être supérieure ou égale à 0.";
-                return;
-            }
-
-            // --- Validation : HR ≤ 1 (W physiquement cohérent avec T) ---
-            const Pv = pression_vapeur(W);
             const Psat = pression_saturation(T);
-            if (Pv > Psat) {
-                const W_max = (0.622 * Psat) / (PRESSION_ATM - Psat);
-                resultat.textContent =
-                    `Erreur : W trop élevé pour T = ${T} °C.\n` +
-                    `À cette température, W max (air saturé) = ${W_max.toFixed(5)} kg/kg.\n` +
-                    `Au-delà, l'humidité relative dépasserait 100 %, ce qui est physiquement impossible.`;
-                return;
+            let W;
+            let RH;
+
+            if (humType === 'W') {
+                W = inputValue;
+
+                // --- Validation : W ≥ 0 ---
+                if (W < 0) {
+                    resultat.textContent = "Erreur : l'humidité massique W doit être supérieure ou égale à 0.";
+                    return;
+                }
+
+                const PvFromW = pression_vapeur(W);
+                if (PvFromW > Psat) {
+                    const W_max = (0.622 * Psat) / (PRESSION_ATM - Psat);
+                    resultat.textContent =
+                        `Erreur : W trop élevé pour T = ${T} °C.\n` +
+                        `À cette température, W max (air saturé) = ${W_max.toFixed(5)} kg/kg.\n` +
+                        `Au-delà, l'humidité relative dépasserait 100 %, ce qui est physiquement impossible.`;
+                    return;
+                }
+
+                RH = PvFromW / Psat;
+            } else {
+                RH = inputValue / 100;
+
+                // --- Validation : 0 ≤ RH ≤ 100 ---
+                if (RH < 0 || RH > 1) {
+                    resultat.textContent = "Erreur : l'humidité relative RH doit être comprise entre 0 et 100 %.";
+                    return;
+                }
+
+                const PvFromRh = RH * Psat;
+                if (PvFromRh >= PRESSION_ATM) {
+                    resultat.textContent = "Erreur : combinaison T/RH invalide (pression de vapeur trop élevée).";
+                    return;
+                }
+
+                W = (0.622 * PvFromRh) / (PRESSION_ATM - PvFromRh);
             }
+            const Pv = pression_vapeur(W);
 
             // --- Calculs ---
-            const RH = Pv / Psat;
+            const RH_calc = Pv / Psat;
             const h = enthalpie(T, W);
             const v = volume_specifique(T, W);
             const Tdp = point_rosee(Pv);
@@ -534,7 +593,7 @@
                 "------ RÉSULTATS ------",
                 `Température          : ${T.toFixed(2)} °C`,
                 `Humidité massique W  : ${W.toFixed(5)} kg vapeur / kg air sec`,
-                `Humidité relative    : ${(RH * 100).toFixed(2)} %`,
+                `Humidité relative    : ${(RH_calc * 100).toFixed(5)} %`,
                 `Pression de vapeur   : ${Pv.toFixed(3)} kPa`,
                 `Pression de sat.     : ${Psat.toFixed(3)} kPa`,
                 `Enthalpie            : ${h.toFixed(2)} kJ/kg`,
@@ -548,10 +607,32 @@
             addHistoryEntry({
                 T,
                 W,
-                RH: RH * 100,
+                RH: RH_calc * 100,
                 h,
                 Tdp
             });
+        }
+
+        function updateHumidityInputUi() {
+            const humTypeInput = document.getElementById('hum-type');
+            const humLabel = document.getElementById('hum-input-label');
+            const humValueInput = document.getElementById('hum-value');
+
+            if (!humTypeInput || !humLabel || !humValueInput) return;
+
+            if (humTypeInput.value === 'W') {
+                humLabel.textContent = 'Humidité Massique W (kg vapeur / kg air sec) :';
+                humValueInput.placeholder = 'Humidité Massique W';
+                humValueInput.step = '0.00001';
+                humValueInput.min = '0';
+                humValueInput.max = '';
+            } else {
+                humLabel.textContent = 'Humidité Relative RH (%) :';
+                humValueInput.placeholder = 'Humidité Relative RH (%)';
+                humValueInput.step = '0.1';
+                humValueInput.min = '0';
+                humValueInput.max = '100';
+            }
         }
 
         function readHistory() {
@@ -613,8 +694,9 @@
 
         function setupEnterToCalculate() {
             const tempInput = document.getElementById('temp');
-            const humInput = document.getElementById('hum');
-            const inputs = [tempInput, humInput].filter(Boolean);
+            const humValueInput = document.getElementById('hum-value');
+            const humTypeInput = document.getElementById('hum-type');
+            const inputs = [tempInput, humValueInput, humTypeInput].filter(Boolean);
 
             inputs.forEach((input) => {
                 input.addEventListener('keydown', (event) => {
@@ -660,6 +742,12 @@
         window.addEventListener('DOMContentLoaded', () => {
             renderHistory();
             setupEnterToCalculate();
+            updateHumidityInputUi();
+
+            const humTypeInput = document.getElementById('hum-type');
+            if (humTypeInput) {
+                humTypeInput.addEventListener('change', updateHumidityInputUi);
+            }
         });
         window.copyResult = copyResult;
         window.clearHistory = clearHistory;
@@ -691,13 +779,24 @@
                 </tr>
                 <tr>
                     <td>
-                        Humidité Massique W (kg vapeur / kg air sec) :
+                        Mode d'entrée humidité :
                     </td>
                     <td>
-                        <input type="number" id="hum" placeholder="Humidité Massique W">
+                        <select id="hum-type" aria-label="Mode d'entrée humidité">
+                            <option value="W">Humidité Massique W</option>
+                            <option value="RH">Humidité Relative RH</option>
+                        </select>
                     </td>
                 </tr>
                 <tr>
+                    <td id="hum-input-label">
+                        Humidité Massique W (kg vapeur / kg air sec) :
+                    </td>
+                    <td>
+                        <input type="number" id="hum-value" placeholder="Humidité Massique W">
+                    </td>
+                </tr>
+                <tr class="result-row">
                     <td colspan="2">
                         <div class="result-wrap">
                             <button id="copy-result-btn" class="copy-result-btn" type="button" onclick="copyResult()">Copier</button>
@@ -705,7 +804,7 @@
                         </div>
                     </td>
                 </tr>
-                <tr>
+                <tr class="action-row">
                     <td colspan="2">
                         <input type="button" class="button" value="Calculer" onclick="runCalculation()">
                     </td>
