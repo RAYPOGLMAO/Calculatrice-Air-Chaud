@@ -548,7 +548,7 @@
 
                 // --- Validation : W ≥ 0 ---
                 if (W < 0) {
-                    resultat.textContent = "Erreur : l'humidité massique W doit être supérieure ou égale à 0.";
+                    resultat.textContent = "Erreur : l'humidité Absolue W doit être supérieure ou égale à 0.";
                     return;
                 }
 
@@ -592,7 +592,7 @@
             const output = [
                 "------ RÉSULTATS ------",
                 `Température          : ${T.toFixed(2)} °C`,
-                `Humidité massique W  : ${W.toFixed(5)} kg vapeur / kg air sec`,
+                `Humidité Absolue W  : ${W.toFixed(5)} kg vapeur / kg air sec`,
                 `Humidité relative    : ${(RH_calc * 100).toFixed(5)} %`,
                 `Pression de vapeur   : ${Pv.toFixed(3)} kPa`,
                 `Pression de sat.     : ${Psat.toFixed(3)} kPa`,
@@ -621,8 +621,8 @@
             if (!humTypeInput || !humLabel || !humValueInput) return;
 
             if (humTypeInput.value === 'W') {
-                humLabel.textContent = 'Humidité Massique W (kg vapeur / kg air sec) :';
-                humValueInput.placeholder = 'Humidité Massique W';
+                humLabel.textContent = 'Humidité Absolue W (kg vapeur / kg air sec) :';
+                humValueInput.placeholder = 'Humidité Absolue W';
                 humValueInput.step = '0.00001';
                 humValueInput.min = '0';
                 humValueInput.max = '';
@@ -783,17 +783,17 @@
                     </td>
                     <td>
                         <select id="hum-type" aria-label="Mode d'entrée humidité">
-                            <option value="W">Humidité Massique W</option>
+                            <option value="W">Humidité Absolue W</option>
                             <option value="RH">Humidité Relative RH</option>
                         </select>
                     </td>
                 </tr>
                 <tr>
                     <td id="hum-input-label">
-                        Humidité Massique W (kg vapeur / kg air sec) :
+                        Humidité Absolue W (kg vapeur / kg air sec) :
                     </td>
                     <td>
-                        <input type="number" id="hum-value" placeholder="Humidité Massique W">
+                        <input type="number" id="hum-value" placeholder="Humidité Absolue W">
                     </td>
                 </tr>
                 <tr class="result-row">
